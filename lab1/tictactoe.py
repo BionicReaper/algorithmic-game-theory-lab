@@ -1,19 +1,58 @@
 import sys
+import pygame
+
+pygame.init()
 
 
-misere: bool
+# Game settings
+misere: bool = False
+dimension: int = 3
+
+# Pygame constants
+SCREEN = pygame.display.set_mode((600, 600), pygame.RESIZABLE)
+WIDTH, HEIGHT = SCREEN.get_size()
+pygame.display.set_caption("Tic-Tac-Toe")
+FONT = pygame.font.SysFont(None, 36)
+FPS = 60
+
+# Display settings
+CELL_SIZE = min(WIDTH, HEIGHT) // dimension
+
+# Colors
+BG = (24, 24, 24)
+LINE = (23, 145, 135)
+X_COLOR = (19, 128, 13)
+O_COLOR = (229, 24, 20)
+MSG_COLOR = (33, 56, 214)
+
+# State
+show_menu = True
+board = [[None for _ in range(dimension)] for _ in range(dimension)]
+turn = 'X'
+game_over = False
+
+def draw_grid():
+    for i in range(1, dimension):
+        pygame.draw.line(SCREEN, LINE, (0, i * CELL_SIZE), (WIDTH, i * CELL_SIZE), 2)
+        pygame.draw.line(SCREEN, LINE, (i * CELL_SIZE, 0), (i * CELL_SIZE, HEIGHT), 2)
+
+def draw():
+    draw_grid()
+
+def main():
+    running = True
+    clock = pygame.time.Clock()
+
+    while running:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                running = False
+            elif event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_ESCAPE:
+                    running = False
+
+        draw()
+        clock.tick(FPS)
 
 if __name__ == "__main__":
-    if len(sys.argv) == 3 and sys.argv[1] == "--misere":
-        if sys.argv[2].lower() == "true":
-            misere = True
-        elif sys.argv[2].lower() == "false":
-            misere = False
-        else:
-            miserePrompt = input("Invalid argument for --misere. Enable misere rules? (y/n): ").strip().lower()
-            misere = miserePrompt == "y"
-    else:
-        miserePrompt = input("Enable misere rules? (y/n): ").strip().lower()
-        misere = miserePrompt == "y"
-
-    print("tictactoe module loaded. misere =", misere)
+    main()
