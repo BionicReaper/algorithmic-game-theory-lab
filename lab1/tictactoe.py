@@ -99,15 +99,23 @@ def handle_click(pos):
 def check_winner():
     # Check rows and columns
     for i in range(dimension):
-        if all(board[i][j] == turn for j in range(dimension)):
+        if all(board[i][j] is not None for j in range(dimension)):
+            if misere:
+                return 'O' if turn == 'X' else 'X'
             return turn
-        if all(board[j][i] == turn for j in range(dimension)):
+        if all(board[j][i] is not None for j in range(dimension)):
+            if misere:
+                return 'O' if turn == 'X' else 'X'
             return turn
 
     # Check diagonals
-    if all(board[i][i] == turn for i in range(dimension)):
+    if all(board[i][i] is not None for i in range(dimension)):
+        if misere:
+            return 'O' if turn == 'X' else 'X'
         return turn
-    if all(board[i][dimension - 1 - i] == turn for i in range(dimension)):
+    if all(board[i][dimension - 1 - i] is not None for i in range(dimension)):
+        if misere:
+            return 'O' if turn == 'X' else 'X'
         return turn
 
     return None
@@ -139,7 +147,7 @@ def main():
                             game_over = True
                     swap_turn()
         draw()
-        clock.tick(FPS)
+        clock.tick(FPS+1)
 
 if __name__ == "__main__":
     main()
