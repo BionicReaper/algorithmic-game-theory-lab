@@ -23,8 +23,8 @@ HEIGHT_OFFSET = HEIGHT // 2 if HEIGHT > WIDTH else 0
 # Colors
 BG = (24, 24, 24)
 LINE = (23, 145, 135)
-X_COLOR = (19, 128, 13)
-O_COLOR = (229, 24, 20)
+X_COLOR = (229, 24, 20)
+O_COLOR = (19, 128, 13)
 MSG_COLOR = (33, 56, 214)
 
 # State
