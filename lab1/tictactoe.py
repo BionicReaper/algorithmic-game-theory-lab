@@ -30,7 +30,7 @@ MSG_COLOR = (33, 56, 214)
 # State
 show_menu = False
 board = [[None for _ in range(dimension)] for _ in range(dimension)]
-turn = 'X'
+turn = 'O'
 game_over = False
 winner = None
 
@@ -84,6 +84,13 @@ def draw():
 
 # Handle game logic
 
+def reset_game():
+    global board, turn, game_over, winner
+    board = [[None for _ in range(dimension)] for _ in range(dimension)]
+    turn = 'O'
+    game_over = False
+    winner = None
+
 def swap_turn():
     global turn
     turn = 'O' if turn == 'X' else 'X'
@@ -134,6 +141,8 @@ def main():
             elif event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_ESCAPE:
                     running = False
+                elif event.key == pygame.K_r:
+                    reset_game()
             elif event.type == pygame.MOUSEBUTTONDOWN:
                 if not game_over and not show_menu:
                     pos = event.pos
