@@ -31,13 +31,26 @@ board = [[None for _ in range(dimension)] for _ in range(dimension)]
 turn = 'X'
 game_over = False
 
+def update_dimensions():
+    global WIDTH
+    global HEIGHT
+    global CELL_SIZE
+    WIDTH, HEIGHT = SCREEN.get_size()
+    CELL_SIZE = min(WIDTH, HEIGHT) // dimension
+
+def draw_background():
+    SCREEN.fill(BG)
+
 def draw_grid():
     for i in range(1, dimension):
         pygame.draw.line(SCREEN, LINE, (0, i * CELL_SIZE), (WIDTH, i * CELL_SIZE), 2)
         pygame.draw.line(SCREEN, LINE, (i * CELL_SIZE, 0), (i * CELL_SIZE, HEIGHT), 2)
 
 def draw():
+    update_dimensions()
+    draw_background()
     draw_grid()
+    pygame.display.flip()
 
 def main():
     running = True
