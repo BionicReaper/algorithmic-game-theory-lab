@@ -145,7 +145,7 @@ def main():
                         if result:
                             winner = result
                             game_over = True
-                    swap_turn()
+                        swap_turn()
         draw()
         clock.tick(FPS+1)
 
