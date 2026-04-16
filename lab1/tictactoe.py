@@ -84,6 +84,16 @@ def draw():
 
 # Handle game logic
 
+def mark_cell(cell):
+    global board, turn, game_over, winner
+    row, col = cell
+    board[row][col] = turn
+    result = check_winner()
+    if result:
+        winner = result
+        game_over = True
+    swap_turn()
+
 def reset_game():
     global board, turn, game_over, winner
     board = [[None for _ in range(dimension)] for _ in range(dimension)]
@@ -148,13 +158,7 @@ def main():
                     pos = event.pos
                     cell = handle_click(pos)
                     if cell:
-                        row, col = cell
-                        board[row][col] = turn
-                        result = check_winner()
-                        if result:
-                            winner = result
-                            game_over = True
-                        swap_turn()
+                        mark_cell(cell)
         draw()
         clock.tick(FPS+1)
 
