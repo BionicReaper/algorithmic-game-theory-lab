@@ -23,6 +23,8 @@ HEIGHT_OFFSET = HEIGHT // 2 if HEIGHT > WIDTH else 0
 # Colors
 BG = (24, 24, 24)
 DARK_BG = (12, 12, 12)
+LIGHT_BG_O = (48, 72, 48)
+LIGHT_BG_X = (72, 48, 48)
 LINE = (23, 145, 135)
 X_COLOR = (229, 24, 20)
 O_COLOR = (19, 128, 13)
@@ -54,11 +56,34 @@ def draw_background():
     SCREEN.fill(BG)
 
 def darken_hovered_cell():
+    if(game_over or show_menu):
+        return
     x, y = pygame.mouse.get_pos()
     col = (x - WIDTH_OFFSET) // (CELL_SIZE + 1)
     row = (y - HEIGHT_OFFSET) // (CELL_SIZE + 1)
     if 0 <= row < dimension and 0 <= col < dimension and board[row][col] is None:
         pygame.draw.rect(SCREEN, DARK_BG, (WIDTH_OFFSET + col * (CELL_SIZE + 1), HEIGHT_OFFSET + row * (CELL_SIZE + 1), CELL_SIZE, CELL_SIZE))
+
+def lighten_winning_cells():
+    if (not game_over) or (winner is None):
+        return
+    WINNER_BG = LIGHT_BG_O if winner == 'O' else LIGHT_BG_X
+    # Highlight winning cells
+    for i in range(dimension):
+        if all(board[i][j] is not None for j in range(dimension)):
+            pygame.draw.rect(SCREEN, WINNER_BG, (WIDTH_OFFSET, HEIGHT_OFFSET + i * (CELL_SIZE + 1), dimension * CELL_SIZE + 2, CELL_SIZE))
+            return
+        if all(board[j][i] is not None for j in range(dimension)):
+            pygame.draw.rect(SCREEN, WINNER_BG, (WIDTH_OFFSET + i * (CELL_SIZE + 1), HEIGHT_OFFSET, CELL_SIZE, dimension * CELL_SIZE + 2))
+            return
+    if all(board[i][i] is not None for i in range(dimension)):
+        for i in range(dimension):
+            pygame.draw.rect(SCREEN, WINNER_BG, (WIDTH_OFFSET + i * (CELL_SIZE + 1), HEIGHT_OFFSET + i * (CELL_SIZE + 1), CELL_SIZE, CELL_SIZE))
+        return
+    if all(board[i][dimension - 1 - i] is not None for i in range(dimension)):
+        for i in range(dimension):
+            pygame.draw.rect(SCREEN, WINNER_BG, (WIDTH_OFFSET + (dimension - 1 - i) * (CELL_SIZE + 1), HEIGHT_OFFSET + i * (CELL_SIZE + 1), CELL_SIZE, CELL_SIZE))
+        return
 
 def draw_grid():
     for i in range(1, dimension):
@@ -86,6 +111,7 @@ def draw():
     update_dimensions()
     draw_background()
     darken_hovered_cell()
+    lighten_winning_cells()
     draw_grid()
     draw_x()
     draw_o()
