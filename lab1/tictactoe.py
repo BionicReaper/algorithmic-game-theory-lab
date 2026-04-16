@@ -6,7 +6,7 @@ pygame.init()
 
 # Game settings
 misere: bool = False
-dimension: int = 4
+dimension: int = 3
 
 # Pygame constants
 SCREEN = pygame.display.set_mode((600, 600), pygame.RESIZABLE)
@@ -22,6 +22,7 @@ HEIGHT_OFFSET = HEIGHT // 2 if HEIGHT > WIDTH else 0
 
 # Colors
 BG = (24, 24, 24)
+DARK_BG = (12, 12, 12)
 LINE = (23, 145, 135)
 X_COLOR = (229, 24, 20)
 O_COLOR = (19, 128, 13)
@@ -52,6 +53,13 @@ def update_dimensions():
 def draw_background():
     SCREEN.fill(BG)
 
+def darken_hovered_cell():
+    x, y = pygame.mouse.get_pos()
+    col = (x - WIDTH_OFFSET) // (CELL_SIZE + 1)
+    row = (y - HEIGHT_OFFSET) // (CELL_SIZE + 1)
+    if 0 <= row < dimension and 0 <= col < dimension and board[row][col] is None:
+        pygame.draw.rect(SCREEN, DARK_BG, (WIDTH_OFFSET + col * (CELL_SIZE + 1), HEIGHT_OFFSET + row * (CELL_SIZE + 1), CELL_SIZE, CELL_SIZE))
+
 def draw_grid():
     for i in range(1, dimension):
         pygame.draw.line(SCREEN, LINE, (WIDTH_OFFSET, i * CELL_SIZE + (i - 1) + HEIGHT_OFFSET), (WIDTH_OFFSET + dimension * CELL_SIZE + dimension - 1, i * CELL_SIZE + i - 1 + HEIGHT_OFFSET), 1)
@@ -77,6 +85,7 @@ def draw_o():
 def draw():
     update_dimensions()
     draw_background()
+    darken_hovered_cell()
     draw_grid()
     draw_x()
     draw_o()
