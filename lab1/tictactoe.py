@@ -1,3 +1,4 @@
+import ctypes
 import sys
 import pygame
 from tkinter import messagebox
@@ -112,7 +113,11 @@ def draw_o():
 def show_winner_popup_if_needed():
     global show_winner_popup
     if game_over and show_winner_popup:
-        messagebox.showinfo("Game Over", f"{winner} wins!", detail="After pressing OK, press R to restart or ESC to quit.")
+        if sys.platform.startswith("win"):
+            try:
+                ctypes.windll.user32.MessageBoxW(0, f"{winner} wins!\nAfter pressing OK, press R to restart or ESC to quit.", "Game Over", 0)
+            except Exception:
+                pass
         show_winner_popup = False
 
 def draw():
