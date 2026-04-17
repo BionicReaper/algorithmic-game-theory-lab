@@ -1,7 +1,6 @@
 import ctypes
 import sys
 import pygame
-from tkinter import messagebox
 
 pygame.init()
 
@@ -9,6 +8,7 @@ pygame.init()
 # Game settings
 misere: bool = False
 dimension: int = 3
+use_ai: bool = False
 
 # Pygame constants
 SCREEN = pygame.display.set_mode((600, 600), pygame.RESIZABLE)
@@ -19,8 +19,8 @@ FPS = 60
 # Display settings - Check update_dimensions()
 WIDTH, HEIGHT = SCREEN.get_size()
 CELL_SIZE = (min(WIDTH, HEIGHT) - 2) // dimension
-WIDTH_OFFSET = WIDTH // 2 if WIDTH > HEIGHT else 0
-HEIGHT_OFFSET = HEIGHT // 2 if HEIGHT > WIDTH else 0
+WIDTH_OFFSET = (WIDTH - HEIGHT) // 2 if WIDTH > HEIGHT else 0
+HEIGHT_OFFSET = (HEIGHT - WIDTH) // 2 if HEIGHT > WIDTH else 0
 
 # Colors
 BG = (24, 24, 24)
@@ -33,12 +33,24 @@ O_COLOR = (19, 128, 13)
 MSG_COLOR = (33, 56, 214)
 
 # State
-show_menu = False
+show_menu = True
 show_winner_popup = False
 board = [[None for _ in range(dimension)] for _ in range(dimension)]
 turn = 'O'
 game_over = False
 winner = None
+
+# Checkbox Rects
+scaling = min(WIDTH, HEIGHT) / 600
+checkbox_rects = {
+    "misere": pygame.Rect(WIDTH // 2 - 100 * scaling, HEIGHT // 2 - 30 * scaling, 20 * scaling, 20 * scaling),
+    "3x3": pygame.Rect(WIDTH // 2 - 100 * scaling, HEIGHT // 2 + 10 * scaling, 20 * scaling, 20 * scaling),
+    "4x4": pygame.Rect(WIDTH // 2 - 100 * scaling, HEIGHT // 2 + 50 * scaling, 20 * scaling, 20 * scaling),
+    "vs_ai": pygame.Rect(WIDTH // 2 - 100 * scaling, HEIGHT // 2 + 90 * scaling, 20 * scaling, 20 * scaling)
+}
+
+# Startbutton Rect
+start_button_rect = pygame.Rect(WIDTH // 2 - 100 * scaling, HEIGHT // 2 + 140 * scaling, 200 * scaling, 40 * scaling)
 
 # Handle window resizing
 
@@ -48,12 +60,30 @@ def update_dimensions():
     global CELL_SIZE
     global WIDTH_OFFSET
     global HEIGHT_OFFSET
+    global FONT
+    global scaling
+    global start_button_rect
+
+    # Update screen related dimensions
     WIDTH, HEIGHT = SCREEN.get_size()
     CELL_SIZE = (min(WIDTH, HEIGHT) - 2) // dimension
     WIDTH_OFFSET = (WIDTH - HEIGHT) // 2 if WIDTH > HEIGHT else 0
     HEIGHT_OFFSET = (HEIGHT - WIDTH) // 2 if HEIGHT > WIDTH else 0
 
+    # Update font size based on new dimensions
+    FONT = pygame.font.SysFont(None, int(min(WIDTH, HEIGHT) / 600 * 36))
+
+    # Update checkbox and button positions
+    scaling = min(WIDTH, HEIGHT) / 600
+    checkbox_rects["misere"] = pygame.Rect(WIDTH_OFFSET + 200 * scaling, HEIGHT_OFFSET + 100 * scaling, 20 * scaling, 20 * scaling)
+    checkbox_rects["3x3"] = pygame.Rect(WIDTH_OFFSET + 200 * scaling, HEIGHT_OFFSET + 220 * scaling, 20 * scaling, 20 * scaling)
+    checkbox_rects["4x4"] = pygame.Rect(WIDTH_OFFSET + 300 * scaling, HEIGHT_OFFSET + 220 * scaling, 20 * scaling, 20 * scaling)
+    checkbox_rects["vs_ai"] = pygame.Rect(WIDTH_OFFSET + 200 * scaling, HEIGHT_OFFSET + 340 * scaling, 20 * scaling, 20 * scaling)
+    start_button_rect = pygame.Rect(WIDTH_OFFSET + 200 * scaling, HEIGHT_OFFSET + 460 * scaling, 200 * scaling, 40 * scaling)
+
 # Drawing pipeline
+
+# Game drawing functions
 
 def draw_background():
     SCREEN.fill(BG)
@@ -115,14 +145,12 @@ def show_winner_popup_if_needed():
     if game_over and show_winner_popup:
         if sys.platform.startswith("win"):
             try:
-                ctypes.windll.user32.MessageBoxW(0, f"{winner} wins!\nAfter pressing OK, press R to restart or ESC to quit.", "Game Over", 0)
+                ctypes.windll.user32.MessageBoxW(0, f"{winner} wins!\nAfter pressing OK, press R to restart or ESC to quit to menu.", "Game Over", 0)
             except Exception:
                 pass
         show_winner_popup = False
 
-def draw():
-    update_dimensions()
-    draw_background()
+def draw_game():
     darken_hovered_cell()
     lighten_winning_cells()
     draw_grid()
@@ -130,6 +158,62 @@ def draw():
     draw_o()
     pygame.display.flip()
     show_winner_popup_if_needed()
+
+# Menu drawing functions
+
+def render_checkbox(label, value):
+    checkbox_rect = checkbox_rects[label.lower().replace(" ", "_")]
+    pos = (checkbox_rect.x, checkbox_rect.y)
+    pygame.draw.rect(SCREEN, LINE, checkbox_rect, 2)
+    if value:
+        pygame.draw.line(SCREEN, LINE, (pos[0] + 4 * scaling, pos[1] + 10 * scaling), (pos[0] + 8 * scaling, pos[1] + 16 * scaling), 2)
+        pygame.draw.line(SCREEN, LINE, (pos[0] + 8 * scaling, pos[1] + 16 * scaling), (pos[0] + 16 * scaling, pos[1] + 4 * scaling), 2)
+    text = FONT.render(label, True, MSG_COLOR)
+    SCREEN.blit(text, (pos[0] + 30 * scaling, pos[1]))
+    return checkbox_rect
+
+def render_start_button():
+    text = FONT.render("Start Game", True, MSG_COLOR)
+    pygame.draw.rect(SCREEN, LINE, start_button_rect, 2)
+    # Center text in button
+    text_rect = text.get_rect(center=start_button_rect.center)
+    SCREEN.blit(text, text_rect)
+
+def draw_menu():
+    render_checkbox("Misere", misere)
+    render_checkbox("3x3", dimension == 3)
+    render_checkbox("4x4", dimension == 4)
+    render_checkbox("Vs AI", use_ai)
+    render_start_button()
+    pygame.display.flip()
+
+# Main draw function
+
+def draw():
+    update_dimensions()
+    draw_background()
+    if show_menu:
+        draw_menu()
+    else:
+        draw_game()
+
+# Handle menu logic
+
+def handle_click_menu(pos):
+    global misere, dimension, use_ai, show_menu
+    if checkbox_rects["misere"].collidepoint(pos):
+        misere = not misere
+    elif checkbox_rects["3x3"].collidepoint(pos):
+        dimension = 3
+        reset_game()
+    elif checkbox_rects["4x4"].collidepoint(pos):
+        dimension = 4
+        reset_game()
+    elif checkbox_rects["vs_ai"].collidepoint(pos):
+        use_ai = not use_ai
+    elif start_button_rect.collidepoint(pos):
+        reset_game()
+        show_menu = False
 
 # Handle game logic
 
@@ -155,7 +239,7 @@ def swap_turn():
     global turn
     turn = 'O' if turn == 'X' else 'X'
 
-def handle_click(pos):
+def handle_click_board(pos):
     x, y = pos
     col = (x - WIDTH_OFFSET) // (CELL_SIZE + 1)
     row = (y - HEIGHT_OFFSET) // (CELL_SIZE + 1)
@@ -190,7 +274,7 @@ def check_winner():
 # Main loop
 
 def main():
-    global game_over, winner
+    global game_over, winner, show_menu
     running = True
     clock = pygame.time.Clock()
 
@@ -200,15 +284,21 @@ def main():
                 running = False
             elif event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_ESCAPE:
-                    running = False
+                    if not show_menu:
+                        show_menu = True
+                    else:
+                        running = False
                 elif event.key == pygame.K_r:
                     reset_game()
             elif event.type == pygame.MOUSEBUTTONDOWN:
                 if not game_over and not show_menu:
                     pos = event.pos
-                    cell = handle_click(pos)
+                    cell = handle_click_board(pos)
                     if cell:
                         mark_cell(cell)
+                elif show_menu:
+                    pos = event.pos
+                    handle_click_menu(pos)
         draw()
         clock.tick(FPS+1)
 
