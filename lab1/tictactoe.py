@@ -1,5 +1,6 @@
 import sys
 import pygame
+from tkinter import messagebox
 
 pygame.init()
 
@@ -32,6 +33,7 @@ MSG_COLOR = (33, 56, 214)
 
 # State
 show_menu = False
+show_winner_popup = False
 board = [[None for _ in range(dimension)] for _ in range(dimension)]
 turn = 'O'
 game_over = False
@@ -107,6 +109,12 @@ def draw_o():
                 y = HEIGHT_OFFSET + i * CELL_SIZE + i
                 pygame.draw.aacircle(SCREEN, O_COLOR, (x + CELL_SIZE // 2, y + CELL_SIZE // 2), CELL_SIZE // 2 - 10, 3)
 
+def show_winner_popup_if_needed():
+    global show_winner_popup
+    if game_over and show_winner_popup:
+        messagebox.showinfo("Game Over", f"{winner} wins!", detail="After pressing OK, press R to restart or ESC to quit.")
+        show_winner_popup = False
+
 def draw():
     update_dimensions()
     draw_background()
@@ -116,17 +124,19 @@ def draw():
     draw_x()
     draw_o()
     pygame.display.flip()
+    show_winner_popup_if_needed()
 
 # Handle game logic
 
 def mark_cell(cell):
-    global board, turn, game_over, winner
+    global board, turn, game_over, winner, show_winner_popup
     row, col = cell
     board[row][col] = turn
     result = check_winner()
     if result:
         winner = result
         game_over = True
+        show_winner_popup = True
     swap_turn()
 
 def reset_game():
