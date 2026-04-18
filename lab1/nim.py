@@ -16,6 +16,8 @@ max_num_removed_sticks: int
 heaps: array[int]
 turn = 'G' # 'G' for green and 'R' for red
 winner = None
+ai_losing: bool = None
+ai_last_move: tuple[int, int] = None
 
 # Printing constants
 ANSI_GREEN = "\033[92m"
@@ -35,9 +37,15 @@ def print_gamestate():
             print(f"Heap {i + 1}: {heaps[i]}")
     print(f"Maximum number of sticks that can be removed in one turn: {max_num_removed_sticks}")
 
-    color = ANSI_GREEN if turn == "G" else ANSI_RED
-    reset = ANSI_RESET
-    print(f"Current turn player: {color}{turn}{reset}")
+    if use_ai and ai_losing is not None:
+        ai_status = "losing" if ai_losing else "winning"
+        if ai_last_move is not None:
+            last_move_string = f" It took {ai_last_move[1]} stick{'s' if ai_last_move[1] != 1 else ''} from heap {ai_last_move[0] + 1}." if heap_count > 1 else f" It took {ai_last_move[1]} stick{'s' if ai_last_move[1] != 1 else ''}."
+        print(f"AI ({ANSI_RED}R{ANSI_RESET}) is currently in a {ai_status} position.{last_move_string if ai_last_move is not None else ''}")
+    else:
+        color = ANSI_GREEN if turn == "G" else ANSI_RED
+        reset = ANSI_RESET
+        print(f"Current turn player: {color}{turn}{reset}")
 
 # Handle game logic
 
@@ -65,9 +73,56 @@ def check_winner():
         
 # Handle AI logic
 
-def ai_move():
-    # Placeholder for AI logic
-    pass
+def evaluate_position():
+    global ai_losing
+    # Get the AI's evaluation
+    ai_move(should_decrease_heap=False)
+    # Flip the value since the AI is evaluating from the opponent's perspective
+    ai_losing = not ai_losing
+
+def ai_move(should_decrease_heap=True):
+    global ai_losing, ai_last_move
+    if heap_count == 1:
+        if misere:
+            if heaps[0] <= max_num_removed_sticks + 1:
+                sticks_to_remove = heaps[0] - 1
+            else:
+                sticks_to_remove = (heaps[0] - 1) % (max_num_removed_sticks + 1)
+        else:
+            sticks_to_remove = heaps[0] % (max_num_removed_sticks + 1)
+
+        if sticks_to_remove == 0:
+            ai_losing = True
+
+            sticks_to_remove = random.randint(1, min(max_num_removed_sticks, heaps[0]))
+        else:
+            ai_losing = False
+
+        if should_decrease_heap:
+            ai_last_move = (0, sticks_to_remove)
+            decrease_heap(0, sticks_to_remove)
+    else:
+        # MEX arithmetic for multiple heaps
+        mex = array.array('i', [heap % (max_num_removed_sticks + 1) for heap in heaps])
+        total_mex = mex[0] ^ mex[1] ^ mex[2]
+        if total_mex == 0:
+            ai_losing = True
+
+            heaps_to_consider = [i for i in range(heap_count) if heaps[i] > 0]
+            heap_index = random.choice(heaps_to_consider)
+            sticks_to_remove = random.randint(1, min(max_num_removed_sticks, heaps[heap_index]))
+        else:
+            ai_losing = False
+
+            for i in range(heap_count):
+                target_mex = mex[i] ^ total_mex
+                if target_mex < mex[i]:
+                    heap_index = i
+                    sticks_to_remove = mex[i] - target_mex
+                    break
+        if should_decrease_heap:
+            ai_last_move = (heap_index, sticks_to_remove)
+            decrease_heap(heap_index, sticks_to_remove)
 
 # Initialization functions
 
@@ -113,6 +168,8 @@ if __name__ == "__main__":
     input_settings()
     randomize_parameters()
     reset_game()
+    if(use_ai):
+        evaluate_position()
 
     running = True
     valid_move = True
