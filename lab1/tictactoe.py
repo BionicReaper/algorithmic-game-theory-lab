@@ -1,6 +1,8 @@
 import ctypes
 import sys
 import pygame
+import array
+import random
 
 pygame.init()
 
@@ -9,6 +11,19 @@ pygame.init()
 misere: bool = False
 dimension: int = 3
 use_ai: bool = False
+
+# AI constants
+UNCOMPUTED_STATE=255
+TERMINAL_STATE=254
+LOSING_STATE=253
+
+# AI memory
+best_move = {
+    "3x3": array.array('B', [UNCOMPUTED_STATE] * 512),
+    "misere_3x3": array.array('B', [UNCOMPUTED_STATE] * 512),
+    "4x4": array.array('B', [UNCOMPUTED_STATE] * 65536),
+    "misere_4x4": array.array('B', [UNCOMPUTED_STATE] * 65536)
+}
 
 # Pygame constants
 SCREEN = pygame.display.set_mode((600, 600), pygame.RESIZABLE)
@@ -271,6 +286,97 @@ def check_winner():
 
     return None
 
+# Handle AI logic
+
+def get_version():
+    if dimension == 3 and not misere:
+        return "3x3"
+    elif dimension == 3 and misere:
+        return "misere_3x3"
+    elif dimension == 4 and not misere:
+        return "4x4"
+    elif dimension == 4 and misere:
+        return "misere_4x4"
+    
+def coordinates_to_board(row, col):
+    return row * dimension + col
+
+def get_coordinates_for_board(index):
+    row = index // dimension
+    col = index % dimension
+    return row, col
+
+def board_to_index():
+    index = 0
+    for i in range(dimension - 1, -1, -1):
+        for j in range(dimension - 1, -1, -1):
+            index <<= 1
+            if board[i][j] is not None:
+                index |= 1
+    return index
+
+def index_to_board(index):
+    new_board = [[None for _ in range(dimension)] for _ in range(dimension)]
+    for i in range(dimension):
+        for j in range(dimension):
+            if index & 1:
+                new_board[i][j] = 'X'
+            index >>= 1
+    return new_board
+
+def is_terminal_state(index):
+    index_board = index_to_board(index)
+    # Check rows and columns
+    for i in range(dimension):
+        if all(index_board[i][j] is not None for j in range(dimension)):
+            return True
+        if all(index_board[j][i] is not None for j in range(dimension)):
+            return True
+
+    # Check diagonals
+    if all(index_board[i][i] is not None for i in range(dimension)):
+        return True
+    if all(index_board[i][dimension - 1 - i] is not None for i in range(dimension)):
+        return True
+
+    return False
+
+
+def evaluate_position(index):
+    version = get_version()
+    best_move_value = best_move[version][index]
+    if best_move_value == UNCOMPUTED_STATE:
+        if is_terminal_state(index):
+            best_move[version][index] = TERMINAL_STATE
+            return TERMINAL_STATE
+        else:
+            current_board = index_to_board(index)
+            for i in range(dimension):
+                for j in range(dimension):
+                    if not current_board[i][j]:  # If cell is empty
+                        index_to_check = index | (1 << coordinates_to_board(i, j))
+                        if evaluate_position(index_to_check) == LOSING_STATE or (evaluate_position(index_to_check) == TERMINAL_STATE and not misere):
+                            best_move[version][index] = coordinates_to_board(i, j)
+                            return best_move[version][index]
+            best_move[version][index] = LOSING_STATE
+            return best_move[version][index]
+    else:
+        return best_move_value
+
+def ai_move():
+    index = board_to_index()
+    move = evaluate_position(index)
+    if move >= 0 and move < dimension * dimension:
+        row, col = get_coordinates_for_board(move)
+        mark_cell((row, col))
+    else:
+        print("AI is in a losing position!")
+        # No winning move, pick a random empty cell
+        empty_cells = [(i, j) for i in range(dimension) for j in range(dimension) if board[i][j] is None]
+        if empty_cells:
+            mark_cell(random.choice(empty_cells))
+
+
 # Main loop
 
 def main():
@@ -299,6 +405,8 @@ def main():
                 elif show_menu:
                     pos = event.pos
                     handle_click_menu(pos)
+        if use_ai and not game_over and not show_menu and turn == 'X':
+            ai_move()
         draw()
         clock.tick(FPS+1)
 
