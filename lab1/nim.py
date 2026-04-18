@@ -164,7 +164,7 @@ def reset_game():
 
 # Main game loop
 
-if __name__ == "__main__":
+def main():
     input_settings()
     randomize_parameters()
     reset_game()
@@ -219,3 +219,6 @@ if __name__ == "__main__":
             reset = ANSI_RESET
             print(f"Player {color}{winner}{reset} wins!")
             running = False
+
+if __name__ == "__main__":
+    main()
