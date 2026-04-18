@@ -28,7 +28,6 @@ best_move = {
 # Pygame constants
 SCREEN = pygame.display.set_mode((600, 600), pygame.RESIZABLE)
 pygame.display.set_caption("Tic-Tac-Toe")
-FONT = pygame.font.SysFont(None, 36)
 FPS = 60
 
 # Display settings - Check update_dimensions()
@@ -36,6 +35,8 @@ WIDTH, HEIGHT = SCREEN.get_size()
 CELL_SIZE = (min(WIDTH, HEIGHT) - 2) // dimension
 WIDTH_OFFSET = (WIDTH - HEIGHT) // 2 if WIDTH > HEIGHT else 0
 HEIGHT_OFFSET = (HEIGHT - WIDTH) // 2 if HEIGHT > WIDTH else 0
+
+FONT = pygame.font.SysFont(None, 36)
 
 # Colors
 BG = (24, 24, 24)
