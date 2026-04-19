@@ -197,7 +197,7 @@ def main():
                     valid_move = False
             else:
                 # Change the prompt if the user made an invalid choice last loop
-                prompt_string = f"Enter your move as:  <heap number>, <sticks to remove> (e.g. 1, 3 to remove 3 sticks from heap 1).\nHeap number must be between 1 and {heap_count}.\nSticks to remove must be between 1 and {max_num_removed_sticks} and less than or equal to the number of sticks in the chosen heap.\nChoice: " if valid_move else f"Invalid move. Enter your move as:  <heap number>, <sticks to remove> (e.g. 1, 3 to remove 3 sticks from heap 1).\nHeap number must be between 1 and {heap_count}.\nSticks to remove must be between 1 and {max_num_removed_sticks} and less than or equal to the number of sticks in the chosen heap.\nChoice: "
+                prompt_string = f"Enter your move as:  <heap number>, <sticks to remove> (e.g. 1, 2 to remove 2 sticks from heap 1).\nHeap number must be between 1 and {heap_count}.\nSticks to remove must be between 1 and {max_num_removed_sticks} and less than or equal to the number of sticks in the chosen heap.\nChoice: " if valid_move else f"Invalid move. Enter your move as:  <heap number>, <sticks to remove> (e.g. 1, 2 to remove 2 sticks from heap 1).\nHeap number must be between 1 and {heap_count}.\nSticks to remove must be between 1 and {max_num_removed_sticks} and less than or equal to the number of sticks in the chosen heap.\nChoice: "
                 move_prompt = input(prompt_string).strip().split(",")
                 if len(move_prompt) == 2:
                     try:
