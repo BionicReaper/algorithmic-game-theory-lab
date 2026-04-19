@@ -368,9 +368,12 @@ def ai_move():
     index = board_to_index()
     move = evaluate_position(index)
     if move >= 0 and move < dimension * dimension:
+        print("\033[2J\033[3J\033[H", end="")
+        print("AI is in a winning position!")
         row, col = get_coordinates_for_board(move)
         mark_cell((row, col))
     else:
+        print("\033[2J\033[3J\033[H", end="")
         print("AI is in a losing position!")
         # No winning move, pick a random empty cell
         empty_cells = [(i, j) for i in range(dimension) for j in range(dimension) if board[i][j] is None]
