@@ -108,9 +108,12 @@ def ai_move(should_decrease_heap=True):
         if total_mex == 0:
             ai_losing = True
 
-            heaps_to_consider = [i for i in range(heap_count) if heaps[i] > 0]
-            heap_index = random.choice(heaps_to_consider)
-            sticks_to_remove = random.randint(1, min(max_num_removed_sticks, heaps[heap_index]))
+            choices = []
+            for i in range(heap_count):
+                if heaps[i] > 0:
+                    for sticks in range(1, min(max_num_removed_sticks, heaps[i]) + 1):
+                        choices.append((i, sticks))
+            heap_index, sticks_to_remove = random.choice(choices)
         else:
             ai_losing = False
 
