@@ -398,7 +398,7 @@ def main():
                 elif event.key == pygame.K_r:
                     reset_game()
             elif event.type == pygame.MOUSEBUTTONDOWN:
-                if not game_over and not show_menu:
+                if not game_over and not show_menu and (not use_ai or turn == 'O'):
                     pos = event.pos
                     cell = handle_click_board(pos)
                     if cell:
